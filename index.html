@@ -1,0 +1,1014 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>엄씨는 오늘 뭐 먹지?</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap">
+<style>
+  :root {
+    --bg: #FAF6EF;
+    --panel: #FFFFFF;
+    --panel-2: #F3EDE2;
+    --ink: #2B221B;
+    --ink-soft: #6E6257;
+    --line: #E5DCCD;
+    --accent: #C8342C;
+    --accent-ink: #FFFFFF;
+    --accent-soft: #F9E4DF;
+    --gold: #E8A93C;
+    --gold-ink: #3A2A08;
+    --chip-on: #2B221B;
+    --chip-on-ink: #FAF6EF;
+    --shadow: 0 10px 30px rgba(90, 60, 30, .12);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1B1614;
+      --panel: #241E1B;
+      --panel-2: #2E2723;
+      --ink: #F3EAE0;
+      --ink-soft: #A99C8F;
+      --line: #3A322C;
+      --accent: #F0604A;
+      --accent-ink: #22120E;
+      --accent-soft: #3C2620;
+      --gold: #F2B33D;
+      --gold-ink: #2A1E06;
+      --chip-on: #F3EAE0;
+      --chip-on-ink: #1B1614;
+      --shadow: 0 10px 30px rgba(0, 0, 0, .45);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1B1614;
+    --panel: #241E1B;
+    --panel-2: #2E2723;
+    --ink: #F3EAE0;
+    --ink-soft: #A99C8F;
+    --line: #3A322C;
+    --accent: #F0604A;
+    --accent-ink: #22120E;
+    --accent-soft: #3C2620;
+    --gold: #F2B33D;
+    --gold-ink: #2A1E06;
+    --chip-on: #F3EAE0;
+    --chip-on-ink: #1B1614;
+    --shadow: 0 10px 30px rgba(0, 0, 0, .45);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    line-height: 1.6;
+    padding: 28px 16px 60px;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; }
+
+  header { text-align: center; margin-bottom: 20px; }
+  .eyebrow {
+    font-size: 12px; letter-spacing: .18em; color: var(--ink-soft);
+    text-transform: uppercase; margin-bottom: 6px;
+  }
+  h1 {
+    font-family: "Jua", "Apple SD Gothic Neo", sans-serif;
+    font-weight: 400; font-size: clamp(32px, 6.5vw, 46px);
+    margin: 0; line-height: 1.15; text-wrap: balance;
+  }
+  h1 .q { color: var(--accent); }
+  .sub { color: var(--ink-soft); font-size: 14px; margin-top: 6px; }
+
+  /* ── 집/밖 선택 ── */
+  .venue-switch {
+    display: flex; justify-content: center; gap: 8px;
+    margin-bottom: 12px; flex-wrap: wrap;
+  }
+  .venue-btn {
+    font-family: "Jua", sans-serif; font-size: 17px;
+    background: var(--panel); color: var(--ink-soft);
+    border: 2px solid var(--line); border-radius: 14px;
+    padding: 10px 20px; cursor: pointer;
+    transition: all .15s ease;
+  }
+  .venue-btn:hover { border-color: var(--ink-soft); color: var(--ink); }
+  .venue-btn[aria-pressed="true"] {
+    background: var(--accent); border-color: var(--accent); color: var(--accent-ink);
+    transform: scale(1.04);
+  }
+
+  /* ── 날씨 바 ── */
+  .weather-bar {
+    display: flex; justify-content: center; align-items: center;
+    gap: 10px; flex-wrap: wrap; margin-bottom: 16px;
+  }
+  .btn-weather {
+    font-size: 13px; font-weight: 700;
+    background: var(--panel); color: var(--ink-soft);
+    border: 1px dashed var(--line); border-radius: 999px;
+    padding: 6px 14px; cursor: pointer;
+  }
+  .btn-weather:hover { color: var(--ink); border-color: var(--ink-soft); }
+  .btn-weather.on { background: var(--gold); color: var(--gold-ink); border: 1px solid var(--gold); }
+  .weather-msg { font-size: 13px; color: var(--ink-soft); }
+
+  /* ── 모드 탭 ── */
+  .mode-tabs { display: flex; gap: 6px; margin-bottom: -1px; padding: 0 12px; }
+  .mode-tab {
+    font-family: "Jua", sans-serif; font-size: 15px;
+    background: var(--panel-2); color: var(--ink-soft);
+    border: 1px solid var(--line); border-bottom: none;
+    border-radius: 12px 12px 0 0;
+    padding: 8px 18px 6px; cursor: pointer;
+  }
+  .mode-tab[aria-pressed="true"] {
+    background: var(--panel); color: var(--accent);
+    position: relative; z-index: 2;
+  }
+
+  /* ── 뽑기 무대 ── */
+  .stage {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 0 20px 20px 20px;
+    box-shadow: var(--shadow);
+    padding: 30px 22px 26px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .stage::before {
+    content: "";
+    position: absolute; inset: 0 0 auto 0; height: 10px;
+    background: repeating-linear-gradient(90deg,
+      var(--accent) 0 22px, var(--gold) 22px 44px);
+    opacity: .9;
+  }
+  .stage-emoji { font-size: 64px; line-height: 1.1; display: block; min-height: 74px; }
+  .stage-name {
+    font-family: "Jua", "Apple SD Gothic Neo", sans-serif;
+    font-size: clamp(30px, 6vw, 42px);
+    min-height: 1.3em; line-height: 1.3; margin: 6px 0 2px;
+  }
+  .stage-name.rolling { color: var(--ink-soft); filter: blur(.5px); }
+  .stage-cat {
+    display: inline-block; font-size: 12px; font-weight: 700;
+    letter-spacing: .08em; color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 999px; padding: 3px 12px; margin-bottom: 8px;
+    visibility: hidden;
+  }
+  .stage-cat.show { visibility: visible; }
+  .stage-quip { color: var(--ink-soft); font-size: 15px; min-height: 1.6em; }
+
+  .btn-row { display: flex; gap: 10px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+  button { font-family: inherit; cursor: pointer; }
+  .btn-main {
+    font-family: "Jua", sans-serif; font-size: 22px;
+    background: var(--accent); color: var(--accent-ink);
+    border: none; border-radius: 14px; padding: 12px 38px;
+    transition: transform .12s ease, filter .12s ease;
+  }
+  .btn-main:hover { filter: brightness(1.07); transform: translateY(-1px); }
+  .btn-main:active { transform: translateY(1px) scale(.98); }
+  .btn-main:disabled { opacity: .55; cursor: wait; transform: none; }
+  .btn-sub {
+    font-size: 14px; font-weight: 500;
+    background: transparent; color: var(--ink-soft);
+    border: 1px solid var(--line); border-radius: 14px; padding: 12px 18px;
+  }
+  .btn-sub:hover { color: var(--ink); border-color: var(--ink-soft); }
+  .btn-near {
+    font-size: 14px; font-weight: 700;
+    background: var(--gold); color: var(--gold-ink);
+    border: none; border-radius: 14px; padding: 12px 18px;
+  }
+  .btn-near:hover { filter: brightness(1.06); }
+  button:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+  .pool-count { margin-top: 14px; font-size: 13px; color: var(--ink-soft); }
+  .pool-count strong { color: var(--accent); font-variant-numeric: tabular-nums; }
+
+  /* ── 메뉴 월드컵 ── */
+  .wc {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 0 20px 20px 20px;
+    box-shadow: var(--shadow);
+    padding: 26px 22px;
+    text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .wc::before {
+    content: "";
+    position: absolute; inset: 0 0 auto 0; height: 10px;
+    background: repeating-linear-gradient(90deg,
+      var(--gold) 0 22px, var(--accent) 22px 44px);
+    opacity: .9;
+  }
+  .wc-round {
+    font-family: "Jua", sans-serif; font-size: 20px; color: var(--accent);
+    margin-bottom: 14px;
+  }
+  .wc-vs {
+    display: grid; grid-template-columns: 1fr auto 1fr;
+    align-items: stretch; gap: 10px;
+  }
+  .wc-card {
+    background: var(--panel-2); border: 2px solid var(--line);
+    border-radius: 16px; padding: 20px 12px;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    transition: transform .12s ease, border-color .12s ease;
+  }
+  .wc-card:hover { border-color: var(--accent); transform: translateY(-3px); }
+  .wc-card:active { transform: scale(.97); }
+  .wc-emoji { font-size: 46px; line-height: 1.1; }
+  .wc-name {
+    font-family: "Jua", sans-serif; font-size: clamp(17px, 3.6vw, 22px);
+    line-height: 1.25; color: var(--ink);
+  }
+  .wc-quip { font-size: 12px; color: var(--ink-soft); line-height: 1.45; }
+  .wc-mid {
+    align-self: center;
+    font-family: "Jua", sans-serif; font-size: 20px; color: var(--gold);
+  }
+  .wc-note { margin-top: 14px; font-size: 13px; color: var(--ink-soft); }
+  .wc-empty { padding: 24px 0; color: var(--ink-soft); font-size: 14px; }
+
+  /* ── 주변 음식점 ── */
+  .nearby {
+    margin-top: 16px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 18px;
+  }
+  .nearby-title { font-family: "Jua", sans-serif; font-size: 18px; margin-bottom: 4px; }
+  .nearby-status { font-size: 13.5px; color: var(--ink-soft); margin-bottom: 10px; }
+  .near-list { display: flex; flex-direction: column; gap: 6px; }
+  .near-item {
+    display: flex; align-items: baseline; gap: 10px;
+    background: var(--panel-2); border-radius: 10px;
+    padding: 9px 13px; font-size: 14px;
+    color: inherit; text-decoration: none;
+  }
+  .near-item:hover { outline: 2px solid var(--gold); }
+  .near-name { font-weight: 700; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .near-kind { color: var(--ink-soft); font-size: 12.5px; white-space: nowrap; }
+  .near-dist {
+    color: var(--accent); font-weight: 700; font-size: 13px;
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  .map-links { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .map-link {
+    font-size: 13.5px; font-weight: 500; text-decoration: none;
+    color: var(--ink); background: var(--panel-2);
+    border: 1px solid var(--line); border-radius: 999px; padding: 7px 15px;
+  }
+  .map-link:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── 필터 ── */
+  section { margin-top: 26px; }
+  .sec-label {
+    font-size: 12px; font-weight: 700; letter-spacing: .14em;
+    color: var(--ink-soft); margin-bottom: 10px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .sec-label .tiny-btn {
+    font-size: 11px; font-weight: 500; letter-spacing: 0;
+    background: transparent; color: var(--ink-soft);
+    border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px;
+  }
+  .sec-label .tiny-btn:hover { color: var(--accent); border-color: var(--accent); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    font-size: 14px; font-weight: 500;
+    background: var(--panel); color: var(--ink);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 6px 15px;
+    transition: background .12s, color .12s;
+  }
+  .chip:hover { border-color: var(--ink-soft); }
+  .chip[aria-pressed="true"] { background: var(--chip-on); color: var(--chip-on-ink); border-color: var(--chip-on); }
+  .chip.mood[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+
+  /* ── 후보판 ── */
+  .board {
+    margin-top: 12px;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 6px;
+  }
+  .food {
+    background: var(--panel-2);
+    border-radius: 10px; padding: 7px 10px;
+    font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .food .fe { margin-right: 5px; }
+  .board-empty {
+    margin-top: 12px; padding: 20px; text-align: center;
+    color: var(--ink-soft); font-size: 14px;
+    background: var(--panel-2); border-radius: 12px;
+  }
+
+  /* ── 기록 ── */
+  .history { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .history .h-item {
+    font-size: 13px; color: var(--ink-soft);
+    background: var(--panel); border: 1px dashed var(--line);
+    border-radius: 999px; padding: 4px 12px;
+    text-decoration: line-through;
+  }
+  .history .h-item.final { text-decoration: none; color: var(--accent); border-style: solid; border-color: var(--accent); font-weight: 700; }
+
+  /* ── 저녁 일기 ── */
+  .diary { display: flex; flex-wrap: wrap; gap: 8px; }
+  .d-item {
+    font-size: 13px; background: var(--panel);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 4px 12px;
+  }
+  .d-item .d-date { color: var(--ink-soft); font-size: 11.5px; margin-right: 5px; font-variant-numeric: tabular-nums; }
+  .diary-stat { margin-top: 10px; font-size: 13px; color: var(--ink-soft); }
+  .diary-stat strong { color: var(--accent); }
+
+  footer { margin-top: 40px; text-align: center; font-size: 12.5px; color: var(--ink-soft); }
+
+  @keyframes pop {
+    0% { transform: scale(.6); opacity: 0; }
+    70% { transform: scale(1.12); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .pop { animation: pop .45s cubic-bezier(.2,.9,.3,1.2) both; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner {
+    display: inline-block; width: 14px; height: 14px;
+    border: 2px solid var(--line); border-top-color: var(--accent);
+    border-radius: 50%; animation: spin .8s linear infinite;
+    vertical-align: -2px; margin-right: 6px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pop { animation: none; }
+    .btn-main, .chip, .venue-btn, .wc-card { transition: none; }
+    .spinner { animation-duration: 2s; }
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">UHM'S DINNER ROULETTE</div>
+    <h1>엄씨는 오늘 <span class="q">뭐 먹지?</span></h1>
+    <div class="sub">엄씨의 저녁 고민, 여기서 끝냅니다</div>
+  </header>
+
+  <div class="venue-switch" id="venueSwitch">
+    <button class="venue-btn" data-venue="전체" aria-pressed="true">🎲 상관없어</button>
+    <button class="venue-btn" data-venue="집" aria-pressed="false">🏠 집에서 해먹기</button>
+    <button class="venue-btn" data-venue="밖" aria-pressed="false">🍽️ 나가서 사먹기</button>
+  </div>
+
+  <div class="weather-bar">
+    <button class="btn-weather" id="btnWeather">🌤️ 오늘 날씨 반영하기</button>
+    <span class="weather-msg" id="weatherMsg"></span>
+  </div>
+
+  <div class="mode-tabs" id="modeTabs">
+    <button class="mode-tab" data-mode="roulette" aria-pressed="true">🎰 룰렛 뽑기</button>
+    <button class="mode-tab" data-mode="worldcup" aria-pressed="false">🏆 메뉴 월드컵</button>
+  </div>
+
+  <div class="stage" id="stage">
+    <span class="stage-emoji" id="stEmoji">🍽️</span>
+    <span class="stage-cat" id="stCat">한식</span>
+    <div class="stage-name" id="stName">두구두구…</div>
+    <div class="stage-quip" id="stQuip">아래 버튼을 누르면 엄씨의 저녁이 정해집니다</div>
+    <div class="btn-row">
+      <button class="btn-main" id="btnRoll">뽑기!</button>
+      <button class="btn-sub" id="btnAgain" hidden>이건 좀… 다시</button>
+      <button class="btn-sub" id="btnLock" hidden>이걸로 결정!</button>
+      <button class="btn-near" id="btnNear" hidden>📍 주변 1km 음식점 찾기</button>
+    </div>
+    <div class="pool-count" id="poolCount"></div>
+  </div>
+
+  <div class="wc" id="wcPanel" hidden>
+    <div class="wc-round" id="wcRound">16강</div>
+    <div class="wc-vs" id="wcVs">
+      <button class="wc-card" id="wcA"></button>
+      <div class="wc-mid">VS</div>
+      <button class="wc-card" id="wcB"></button>
+    </div>
+    <div class="wc-empty" id="wcEmpty" hidden></div>
+    <div class="wc-note">더 끌리는 쪽을 누르세요 — 무승부는 없습니다 ⚔️
+      <button class="btn-sub" id="btnShuffle" style="margin-left:8px; padding:4px 12px; font-size:12px;">🔀 다시 섞기</button>
+    </div>
+  </div>
+
+  <div class="nearby" id="nearby" hidden>
+    <div class="nearby-title" id="nearTitle">📍 내 주변 1km</div>
+    <div class="nearby-status" id="nearStatus"></div>
+    <div class="near-list" id="nearList"></div>
+    <div class="map-links" id="mapLinks"></div>
+  </div>
+
+  <section id="secHistory" hidden>
+    <div class="sec-label">오늘 뽑은 것들</div>
+    <div class="history" id="history"></div>
+  </section>
+
+  <section id="secDiary" hidden>
+    <div class="sec-label">📖 엄씨의 저녁 일기 <span style="letter-spacing:0; font-weight:400;">(최근에 먹은 건 후보에서 자동 제외)</span>
+      <button class="tiny-btn" id="btnClearDiary">기록 지우기</button>
+    </div>
+    <div class="diary" id="diary"></div>
+    <div class="diary-stat" id="diaryStat"></div>
+  </section>
+
+  <section>
+    <div class="sec-label">종류</div>
+    <div class="chips" id="catChips"></div>
+  </section>
+
+  <section>
+    <div class="sec-label">오늘의 기분 (겹쳐서 선택 가능)</div>
+    <div class="chips" id="moodChips"></div>
+  </section>
+
+  <section>
+    <div class="sec-label">지금 후보판</div>
+    <div class="board" id="board"></div>
+    <div class="board-empty" id="boardEmpty" hidden>조건에 맞는 메뉴가 없어요. 필터를 하나 풀어보세요!</div>
+  </section>
+
+  <footer>배가 고플수록 첫 번째 뽑기가 정답일 확률이 높습니다 🍚</footer>
+</div>
+
+<script>
+// [이름, 카테고리, 이모지, 태그들, 한줄평, 장소]
+// 태그: 매콤, 국물, 면, 밥, 고기, 해산물, 가벼움, 든든함
+// 장소: "집"(집에서 해먹기 좋음) / "밖"(사먹는 게 나음) / "둘다"
+const FOODS = [
+  // ── 한식 ──
+  ["김치찌개","한식","🍲",["매콤","국물","든든함"],"돼지고기 숭덩숭덩, 실패가 없는 클래식","둘다"],
+  ["된장찌개","한식","🍲",["국물"],"구수한 국물에 밥 한 공기 뚝딱","둘다"],
+  ["부대찌개","한식","🍲",["매콤","국물","고기","든든함"],"라면사리는 두 개부터가 국룰","둘다"],
+  ["순두부찌개","한식","🍲",["매콤","국물"],"보글보글 뚝배기에 계란 퐁당","둘다"],
+  ["제육볶음","한식","🥘",["매콤","고기","밥","든든함"],"불향 가득, 쌈까지 싸면 완벽","둘다"],
+  ["불고기","한식","🥩",["고기","밥"],"달큰한 국물에 당면까지 건져 먹기","둘다"],
+  ["비빔밥","한식","🥗",["밥","가벼움"],"고추장 슥슥, 나물 골고루","둘다"],
+  ["돌솥비빔밥","한식","🍚",["밥","든든함"],"바닥 누룽지가 진짜 주인공","밖"],
+  ["삼겹살","한식","🥓",["고기","든든함"],"오늘 하루 고생했으면 자격 있음","둘다"],
+  ["갈비찜","한식","🍖",["고기","든든함"],"부드럽게 찢어지는 갈비의 위엄","둘다"],
+  ["닭갈비","한식","🍗",["매콤","고기","든든함"],"마무리 볶음밥까지가 한 세트","밖"],
+  ["삼계탕","한식","🐔",["국물","고기","든든함"],"기운 없는 날엔 이만한 게 없죠","둘다"],
+  ["설렁탕","한식","🥣",["국물","고기"],"뽀얀 국물에 소면, 깍두기 필수","밖"],
+  ["갈비탕","한식","🥣",["국물","고기","든든함"],"맑은 국물에 실한 갈비 한 대","밖"],
+  ["육개장","한식","🌶️",["매콤","국물","고기"],"얼큰하게 땀 빼고 싶은 날","밖"],
+  ["감자탕","한식","🍖",["매콤","국물","고기","든든함"],"뼈에 붙은 살 발라 먹는 재미","밖"],
+  ["돼지국밥","한식","🍜",["국물","고기","밥","든든함"],"부추 팍팍, 새우젓 톡톡","밖"],
+  ["순대국밥","한식","🥣",["국물","밥","든든함"],"들깨가루 듬뿍이 국룰","밖"],
+  ["콩나물국밥","한식","🥣",["국물","밥","가벼움"],"속 달래는 데 최고, 계란 반숙 퐁당","둘다"],
+  ["뼈해장국","한식","🍲",["매콤","국물","고기","든든함"],"어제의 나를 용서하는 맛","밖"],
+  ["보쌈","한식","🥬",["고기","든든함"],"수육에 김치 얹어 한 입, 소주 생각 남","밖"],
+  ["족발","한식","🍖",["고기","든든함"],"쫀득한 껍질, 새우젓 찍어서","밖"],
+  ["물냉면","한식","🍜",["면","국물","가벼움"],"살얼음 동동, 식초 겨자는 취향껏","밖"],
+  ["비빔냉면","한식","🍜",["매콤","면","가벼움"],"매콤새콤, 삶은 계란 반 개의 정성","둘다"],
+  ["칼국수","한식","🍜",["면","국물"],"바지락 우린 국물에 겉절이 필수","둘다"],
+  ["수제비","한식","🥣",["국물","면"],"쫀득한 반죽, 비 오는 날 감성","집"],
+  ["김치볶음밥","한식","🍳",["매콤","밥","가벼움"],"계란 프라이 반숙은 선택이 아닌 필수","집"],
+  ["오징어볶음","한식","🦑",["매콤","해산물","밥"],"매콤한 양념에 콩나물 아삭","둘다"],
+  ["낙지볶음","한식","🐙",["매콤","해산물","밥"],"스트레스가 녹는 화끈한 맛","밖"],
+  ["아구찜","한식","🐟",["매콤","해산물","든든함"],"콩나물 반 아구 반, 밥도둑","밖"],
+  ["곱창구이","한식","🔥",["고기","든든함"],"쫄깃 고소, 볶음밥으로 마무리","밖"],
+  ["닭볶음탕","한식","🍗",["매콤","국물","고기","든든함"],"감자가 맛있으면 다 된 요리","둘다"],
+  ["생선구이","한식","🐟",["해산물","밥","가벼움"],"고등어 한 토막에 흰쌀밥","둘다"],
+  ["청국장","한식","🥣",["국물","밥"],"냄새는 세도 맛은 진국","둘다"],
+  ["계란말이 정식","한식","🍳",["밥","가벼움"],"폭신한 계란말이에 케첩 살짝","집"],
+  ["카레라이스","한식","🍛",["밥","든든함"],"3분 카레도, 정성 카레도 다 맛있음","집"],
+  ["파전","한식","🥞",["가벼움","해산물"],"비 오는 소리는 파전 부치는 소리","둘다"],
+  // ── 분식 ──
+  ["떡볶이","분식","🍢",["매콤","가벼움"],"국물 떡볶이냐 기름 떡볶이냐 그것이 문제","둘다"],
+  ["라볶이","분식","🍜",["매콤","면","든든함"],"라면과 떡볶이의 행복한 결혼","둘다"],
+  ["김밥","분식","🍙",["밥","가벼움"],"참치? 치즈? 오늘은 다 넣자","둘다"],
+  ["라면","분식","🍜",["매콤","면","국물","가벼움"],"계란, 파, 그리고 반쯤 익은 면","집"],
+  ["쫄면","분식","🍜",["매콤","면","가벼움"],"쫄깃한 면발에 새콤달콤 양념","둘다"],
+  ["순대","분식","🌭",["가벼움"],"떡볶이 국물에 찍어 먹으면 두 배","밖"],
+  ["모둠튀김","분식","🍤",["가벼움"],"김말이, 오징어, 고구마는 못 참지","밖"],
+  ["길거리토스트","분식","🥪",["가벼움"],"설탕 한 스푼의 추억 감성","집"],
+  ["컵밥","분식","🍚",["밥","가벼움"],"빠르고 든든한 한 그릇","밖"],
+  ["우동(분식)","분식","🍜",["면","국물","가벼움"],"뜨끈한 국물에 유부 두 장","둘다"],
+  // ── 중식 ──
+  ["짜장면","중식","🍜",["면","든든함"],"고민될 땐 결국 짜장이 이김","밖"],
+  ["짬뽕","중식","🍜",["매콤","면","국물","해산물","든든함"],"얼큰한 국물에 오징어 듬뿍","밖"],
+  ["탕수육","중식","🍖",["고기","든든함"],"부먹 찍먹 전쟁은 오늘도 계속된다","밖"],
+  ["마파두부","중식","🌶️",["매콤","밥"],"얼얼한 마라향에 밥 비벼 먹기","둘다"],
+  ["깐풍기","중식","🍗",["매콤","고기"],"바삭한 튀김에 매콤달콤 소스","밖"],
+  ["마라탕","중식","🌶️",["매콤","국물","면","든든함"],"오늘의 맵기: 2단계면 충분해요","밖"],
+  ["마라샹궈","중식","🥘",["매콤","든든함"],"건더기 고르는 재미가 절반","밖"],
+  ["훠궈","중식","🍲",["매콤","국물","고기","든든함"],"홍탕 백탕 반반이 진리","밖"],
+  ["딤섬","중식","🥟",["가벼움"],"한 입 크기의 행복이 층층이","밖"],
+  ["양꼬치","중식","🍢",["고기","든든함"],"즈란 솔솔, 칭따오는 셀프","밖"],
+  ["중화볶음밥","중식","🍚",["밥"],"불맛 나는 고슬고슬 볶음밥","둘다"],
+  ["군만두","중식","🥟",["가벼움"],"바삭한 바닥면이 생명 (냉동만두 인정)","둘다"],
+  // ── 일식 ──
+  ["초밥","일식","🍣",["해산물","밥"],"오늘은 나에게 주는 선물","밖"],
+  ["회덮밥","일식","🍚",["해산물","밥","가벼움"],"초고추장 슥슥 비벼서","밖"],
+  ["돈카츠","일식","🍱",["고기","밥","든든함"],"바삭한 옷 속 촉촉한 등심","둘다"],
+  ["라멘","일식","🍜",["면","국물","고기","든든함"],"진한 돈코츠에 차슈 추가","밖"],
+  ["우동","일식","🍜",["면","국물"],"탱글한 면발, 튀김 하나 얹으면 완성","둘다"],
+  ["소바","일식","🍜",["면","가벼움"],"시원한 쯔유에 와사비 살짝","밖"],
+  ["규동","일식","🍚",["고기","밥"],"달큰한 소고기 덮밥, 온천계란 추가","둘다"],
+  ["가츠동","일식","🍚",["고기","밥","든든함"],"계란이 부드럽게 감싼 돈카츠","둘다"],
+  ["사케동","일식","🍣",["해산물","밥"],"연어가 이불처럼 덮인 밥","밖"],
+  ["오코노미야키","일식","🥞",["가벼움"],"가쓰오부시가 춤추는 부침개","둘다"],
+  ["타코야키","일식","🐙",["해산물","가벼움"],"겉바속촉, 문어는 보물찾기","밖"],
+  ["나베","일식","🍲",["국물","든든함"],"보글보글 끓여 먹는 일본식 전골","둘다"],
+  ["일본식 카레","일식","🍛",["밥","든든함"],"진하고 묵직한 카레에 카츠 추가","둘다"],
+  // ── 양식 ──
+  ["파스타","양식","🍝",["면"],"오일? 크림? 토마토? 행복한 고민","둘다"],
+  ["피자","양식","🍕",["든든함"],"오늘만큼은 도우 끝까지 다 먹기","밖"],
+  ["스테이크","양식","🥩",["고기","든든함"],"미디엄 레어, 오늘의 나에게 건배","둘다"],
+  ["수제버거","양식","🍔",["고기","든든함"],"육즙이 뚝뚝, 두 손으로 꽉 잡고","밖"],
+  ["리조또","양식","🍚",["밥"],"꾸덕한 치즈의 위로","둘다"],
+  ["샐러드볼","양식","🥗",["가벼움"],"내일의 나를 위한 착한 선택","둘다"],
+  ["오므라이스","양식","🍳",["밥","가벼움"],"폭신한 계란 이불 덮은 밥","둘다"],
+  ["함박스테이크","양식","🍖",["고기","밥","든든함"],"경양식집 추억의 그 맛","둘다"],
+  ["돈까스(경양식)","양식","🍽️",["고기","든든함"],"수프부터 나오는 옛날식 돈까스","밖"],
+  ["프라이드치킨","양식","🍗",["고기","든든함"],"치킨은 언제나 옳다, 반박 불가","밖"],
+  ["양념치킨","양식","🍗",["매콤","고기","든든함"],"단짠매콤, 손가락까지 쪽쪽","밖"],
+  // ── 아시안 ──
+  ["쌀국수","아시안","🍜",["면","국물","가벼움"],"숙주 팍팍, 라임 꾹 짜서","밖"],
+  ["팟타이","아시안","🍜",["면"],"새콤달콤 볶음면에 땅콩 솔솔","밖"],
+  ["분짜","아시안","🥢",["면","고기","가벼움"],"숯불향 고기에 쌀국수 적셔서","밖"],
+  ["반미","아시안","🥖",["가벼움"],"바삭한 바게트 속 고수 한 줌","밖"],
+  ["나시고렝","아시안","🍚",["매콤","밥"],"계란 프라이 올린 인도네시아 볶음밥","둘다"],
+  ["똠얌꿍","아시안","🍲",["매콤","국물","해산물"],"시고 맵고 향긋한 태국의 맛","밖"],
+  ["인도 커리","아시안","🍛",["매콤","밥","든든함"],"갓 구운 난 찢어 찍어 먹기","밖"],
+  ["케밥","아시안","🌯",["고기","가벼움"],"한 손에 들고 먹는 든든한 한 끼","밖"]
+];
+
+const CATS = ["전체","한식","분식","중식","일식","양식","아시안"];
+const MOODS = [
+  ["매콤","🔥 매콤한 게 땡겨"],
+  ["국물","🍲 국물이 필요해"],
+  ["면","🍜 면 땡기는 날"],
+  ["밥","🍚 밥심이 필요해"],
+  ["고기","🥩 고기 아니면 안 돼"],
+  ["해산물","🦐 바다의 맛"],
+  ["가벼움","🌿 가볍게 먹자"],
+  ["든든함","💪 든든하게 먹자"]
+];
+
+const REROLL_QUIPS = [
+  "다시 뽑는 중… 첫 술에 배부르랴",
+  "다시 뽑는 중… 슬슬 진심으로 고르셔야 합니다",
+  "결정장애 3단계 진입 🚨",
+  "이쯤 되면 뭘 봐도 시큰둥하실 텐데요…",
+  "엄씨… 그냥 눈 감고 이번 걸로 하시죠"
+];
+
+let curVenue = "전체";
+let curCat = "전체";
+let curMoods = new Set();
+let picked = [];
+let rolling = false;
+let current = null;
+let mode = "roulette";
+let rerollCount = 0;
+let boostTags = [];
+let weatherOn = false;
+
+const $ = id => document.getElementById(id);
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ── 저녁 일기 (localStorage) ── */
+const LS_KEY = "uhm.dinner.history";
+function loadDiary() {
+  try { return JSON.parse(localStorage.getItem(LS_KEY)) || []; } catch (e) { return []; }
+}
+function saveDiary(h) {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(h.slice(-30))); } catch (e) {}
+}
+function recentEaten() {
+  return [...new Set(loadDiary().slice(-2).map(x => x.n))];
+}
+function renderDiary() {
+  const h = loadDiary();
+  $("secDiary").hidden = h.length === 0;
+  if (!h.length) return;
+  const last7 = h.slice(-7).reverse();
+  $("diary").innerHTML = last7.map(x => {
+    const [, m, d] = (x.iso || "").split("-");
+    return `<span class="d-item"><span class="d-date">${+m}/${+d}</span>${x.e} ${x.n}</span>`;
+  }).join("");
+  const counts = {};
+  h.slice(-7).forEach(x => counts[x.c] = (counts[x.c] || 0) + 1);
+  const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+  $("diaryStat").innerHTML = top && top[1] >= 2
+    ? `최근 ${Math.min(h.length, 7)}끼 중 <strong>${top[0]} ${top[1]}번</strong> — 엄씨 입맛, 확실히 ${top[0]}파`
+    : `기록이 쌓이면 엄씨의 입맛 통계가 나옵니다`;
+}
+
+/* ── 후보 계산 ── */
+function venueOk(f) {
+  const v = f[5];
+  if (curVenue === "전체") return true;
+  if (curVenue === "집") return v !== "밖";
+  return v !== "집";
+}
+function basePool(excludePicked = true) {
+  return FOODS.filter(f =>
+    venueOk(f) &&
+    (curCat === "전체" || f[1] === curCat) &&
+    [...curMoods].every(m => f[3].includes(m)) &&
+    (!excludePicked || !picked.includes(f[0]))
+  );
+}
+function pool(excludePicked = true) {
+  const p = basePool(excludePicked);
+  const recent = recentEaten();
+  const woRecent = p.filter(f => !recent.includes(f[0]));
+  return woRecent.length >= 3 ? woRecent : p;
+}
+function weightedPick(p) {
+  if (!boostTags.length) return p[Math.floor(Math.random() * p.length)];
+  const weights = p.map(f => f[3].some(t => boostTags.includes(t)) ? 3 : 1);
+  let total = weights.reduce((a, b) => a + b, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < p.length; i++) { r -= weights[i]; if (r < 0) return p[i]; }
+  return p[p.length - 1];
+}
+
+/* ── 렌더링 ── */
+function renderChips() {
+  $("catChips").innerHTML = CATS.map(c =>
+    `<button class="chip" data-cat="${c}" aria-pressed="${c === curCat}">${c}</button>`).join("");
+  $("moodChips").innerHTML = MOODS.map(([tag, label]) =>
+    `<button class="chip mood" data-mood="${tag}" aria-pressed="${curMoods.has(tag)}">${label}</button>`).join("");
+}
+function renderBoard() {
+  const p = basePool(false);
+  $("board").innerHTML = p.map(f =>
+    `<div class="food"><span class="fe">${f[2]}</span>${f[0]}</div>`).join("");
+  $("boardEmpty").hidden = p.length > 0;
+  const avail = pool().length;
+  $("poolCount").innerHTML = avail > 0
+    ? `지금 후보 <strong>${avail}</strong>개 중에서 뽑습니다` +
+      (boostTags.length ? ` · 날씨 가중치 적용 중 ☂️` : "")
+    : `후보가 없어요 — 필터를 풀거나 기록을 초기화하세요`;
+  $("btnRoll").disabled = rolling || avail === 0;
+}
+function renderHistory() {
+  $("secHistory").hidden = picked.length === 0 && !current?.locked;
+  $("history").innerHTML = picked.map(n => {
+    const f = FOODS.find(x => x[0] === n);
+    return `<span class="h-item">${f ? f[2] + " " : ""}${n}</span>`;
+  }).join("") + (current?.locked
+    ? `<span class="h-item final">✅ ${current.f[2]} ${current.f[0]} 확정!</span>` : "");
+}
+
+/* ── 룰렛 ── */
+function showResult(f, fromWC = false) {
+  current = { f, locked: false };
+  $("stEmoji").textContent = f[2];
+  $("stEmoji").classList.remove("pop"); void $("stEmoji").offsetWidth;
+  $("stEmoji").classList.add("pop");
+  $("stName").textContent = f[0];
+  $("stName").classList.remove("rolling");
+  $("stCat").textContent = f[1] + (f[5] === "집" ? " · 🏠 집밥" : f[5] === "밖" ? " · 🍽️ 외식" : "");
+  $("stCat").classList.add("show");
+  $("stQuip").textContent = (fromWC ? "🏆 치열한 접전 끝에 우승! — " : "") + f[4];
+  $("btnRoll").hidden = true;
+  $("btnAgain").hidden = false;
+  $("btnLock").hidden = false;
+  $("btnNear").hidden = !(f[5] !== "집" && curVenue !== "집");
+  rolling = false;
+  renderBoard();
+}
+function roll() {
+  const p = pool();
+  if (!p.length || rolling) return;
+  const finalPick = weightedPick(p);
+  $("stCat").classList.remove("show");
+  $("btnLock").hidden = true;
+  $("btnAgain").hidden = true;
+  $("btnNear").hidden = true;
+  $("nearby").hidden = true;
+  $("btnRoll").hidden = false;
+  $("btnRoll").textContent = "뽑기!";
+
+  if (reduceMotion || p.length === 1) { showResult(finalPick); return; }
+
+  rolling = true;
+  $("btnRoll").disabled = true;
+  $("stQuip").textContent = rerollCount > 0
+    ? REROLL_QUIPS[Math.min(rerollCount - 1, REROLL_QUIPS.length - 1)]
+    : "운명의 메뉴를 고르는 중…";
+  $("stName").classList.add("rolling");
+
+  const steps = 18;
+  let i = 0;
+  function tick() {
+    const r = p[Math.floor(Math.random() * p.length)];
+    $("stName").textContent = r[0];
+    $("stEmoji").textContent = r[2];
+    i++;
+    if (i < steps) {
+      setTimeout(tick, 50 + Math.pow(i / steps, 2.2) * 260);
+    } else {
+      setTimeout(() => showResult(finalPick), 180);
+    }
+  }
+  tick();
+}
+
+/* ── 메뉴 월드컵 ── */
+let wcList = [], wcNext = [], wcIdx = 0;
+function wcRoundName(n) { return n === 2 ? "결승" : n === 4 ? "준결승" : n + "강"; }
+function wcStart() {
+  const p = pool(false);
+  if (p.length < 4) {
+    $("wcVs").hidden = true;
+    $("wcEmpty").hidden = false;
+    $("wcEmpty").textContent = "월드컵을 열려면 후보가 4개 이상 필요해요. 필터를 조금 풀어주세요!";
+    $("wcRound").textContent = "😢";
+    return;
+  }
+  $("wcVs").hidden = false;
+  $("wcEmpty").hidden = true;
+  const size = p.length >= 16 ? 16 : p.length >= 8 ? 8 : 4;
+  wcList = [...p].sort(() => Math.random() - .5).slice(0, size);
+  wcNext = []; wcIdx = 0;
+  wcRender();
+}
+function wcCardHTML(f) {
+  return `<span class="wc-emoji">${f[2]}</span>
+          <span class="wc-name">${f[0]}</span>
+          <span class="wc-quip">${f[4]}</span>`;
+}
+function wcRender() {
+  const a = wcList[wcIdx], b = wcList[wcIdx + 1];
+  $("wcRound").textContent =
+    `${wcRoundName(wcList.length)} · ${wcIdx / 2 + 1} / ${wcList.length / 2} 경기`;
+  $("wcA").innerHTML = wcCardHTML(a);
+  $("wcB").innerHTML = wcCardHTML(b);
+}
+function wcChoose(side) {
+  const w = wcList[wcIdx + (side === "B" ? 1 : 0)];
+  wcNext.push(w);
+  wcIdx += 2;
+  if (wcIdx >= wcList.length) {
+    if (wcNext.length === 1) {
+      setMode("roulette");
+      showResult(wcNext[0], true);
+      return;
+    }
+    wcList = wcNext; wcNext = []; wcIdx = 0;
+  }
+  wcRender();
+}
+
+/* ── 모드 전환 ── */
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll(".mode-tab").forEach(t =>
+    t.setAttribute("aria-pressed", t.dataset.mode === m));
+  $("stage").hidden = m !== "roulette";
+  $("wcPanel").hidden = m !== "worldcup";
+  $("nearby").hidden = true;
+  if (m === "worldcup") wcStart();
+}
+
+/* ── 날씨 반영 (Open-Meteo, 무료·키 불필요) ── */
+function weatherKind(code, temp) {
+  if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82) || code >= 95)
+    return ["rain", "☔ 비 오는 날", ["국물"], "뜨끈한 국물·전 요리 확률 UP!"];
+  if ((code >= 71 && code <= 77) || code === 85 || code === 86)
+    return ["snow", "❄️ 눈 오는 날", ["국물","든든함"], "뜨끈하고 든든한 메뉴 확률 UP!"];
+  if (temp >= 28)
+    return ["hot", `🥵 더운 날 (${Math.round(temp)}°)`, ["가벼움","면"], "시원하고 가벼운 메뉴 확률 UP!"];
+  if (temp <= 5)
+    return ["cold", `🥶 추운 날 (${Math.round(temp)}°)`, ["국물","든든함"], "뜨끈한 국물 확률 UP!"];
+  return ["mild", `🌤️ 좋은 날씨 (${Math.round(temp)}°)`, [], "뭘 먹어도 맛있는 날!"];
+}
+function clearWeather() {
+  weatherOn = false; boostTags = [];
+  $("btnWeather").classList.remove("on");
+  $("btnWeather").textContent = "🌤️ 오늘 날씨 반영하기";
+  $("weatherMsg").textContent = "";
+  renderBoard();
+}
+function applyWeather() {
+  if (weatherOn) { clearWeather(); return; }
+  if (!navigator.geolocation) {
+    $("weatherMsg").textContent = "이 브라우저는 위치 기능을 지원하지 않아요";
+    return;
+  }
+  $("weatherMsg").innerHTML = `<span class="spinner"></span>위치·날씨 확인 중…`;
+  navigator.geolocation.getCurrentPosition(async pos => {
+    try {
+      const { latitude: lat, longitude: lon } = pos.coords;
+      const res = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code`);
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      const [, label, tags, note] =
+        weatherKind(data.current.weather_code, data.current.temperature_2m);
+      weatherOn = true;
+      boostTags = tags;
+      $("btnWeather").classList.add("on");
+      $("btnWeather").textContent = "날씨 반영 중 ✕";
+      $("weatherMsg").textContent = `${label} — ${note}`;
+      renderBoard();
+    } catch (e) {
+      $("weatherMsg").textContent =
+        "날씨 서버에 연결하지 못했어요 (온라인 게시 환경에서는 차단될 수 있어요)";
+    }
+  }, () => {
+    $("weatherMsg").textContent = "위치 권한이 필요해요 — 주소창의 위치 아이콘에서 허용해 주세요";
+  }, { timeout: 10000, maximumAge: 600000 });
+}
+
+/* ── 주변 음식점 검색 (GPS + OpenStreetMap Overpass) ── */
+function haversine(lat1, lon1, lat2, lon2) {
+  const R = 6371000, rad = Math.PI / 180;
+  const dLat = (lat2 - lat1) * rad, dLon = (lon2 - lon1) * rad;
+  const a = Math.sin(dLat/2)**2 +
+    Math.cos(lat1*rad) * Math.cos(lat2*rad) * Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+const CUISINE_KO = {
+  korean:"한식", chinese:"중식", japanese:"일식", italian:"이탈리안",
+  pizza:"피자", burger:"버거", chicken:"치킨", sushi:"초밥",
+  ramen:"라멘", noodle:"면요리", seafood:"해산물", barbecue:"바비큐",
+  thai:"태국식", vietnamese:"베트남식", indian:"인도식", asian:"아시안",
+  western:"양식", fried_food:"튀김", kebab:"케밥", steak_house:"스테이크"
+};
+function renderMapLinks(menuName) {
+  const q = encodeURIComponent(menuName);
+  const links = [
+    [`카카오맵에서 '${menuName}' 검색`, `https://map.kakao.com/link/search/${q}`],
+    [`네이버지도에서 '${menuName}' 검색`, `https://map.naver.com/p/search/${q}`]
+  ];
+  $("mapLinks").innerHTML = links.map(([label, url]) =>
+    `<a class="map-link" href="${url}" target="_blank" rel="noopener">🗺️ ${label}</a>`).join("");
+}
+async function fetchNearby(lat, lon) {
+  const query = `[out:json][timeout:15];
+(
+  node["amenity"~"restaurant|fast_food|food_court"](around:1000,${lat},${lon});
+  way["amenity"~"restaurant|fast_food|food_court"](around:1000,${lat},${lon});
+);
+out center 60;`;
+  const res = await fetch("https://overpass-api.de/api/interpreter", {
+    method: "POST",
+    body: "data=" + encodeURIComponent(query),
+    headers: { "Content-Type": "application/x-www-form-urlencoded" }
+  });
+  if (!res.ok) throw new Error("overpass " + res.status);
+  const data = await res.json();
+  const items = (data.elements || [])
+    .map(el => {
+      const la = el.lat ?? el.center?.lat, lo = el.lon ?? el.center?.lon;
+      const name = el.tags?.name;
+      if (!name || la == null) return null;
+      const cuisineRaw = (el.tags?.cuisine || "").split(";")[0];
+      return {
+        name,
+        kind: CUISINE_KO[cuisineRaw] || (el.tags?.amenity === "fast_food" ? "패스트푸드" : "음식점"),
+        dist: Math.round(haversine(lat, lon, la, lo)),
+        lat: la, lon: lo
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.dist - b.dist)
+    .slice(0, 15);
+
+  if (!items.length) {
+    $("nearStatus").textContent =
+      "지도 데이터에서 이 주변 음식점을 찾지 못했어요. 아래 지도 링크로 검색해 보세요!";
+    return;
+  }
+  $("nearStatus").textContent =
+    `가까운 순으로 ${items.length}곳 (이름을 누르면 카카오맵으로 이동)`;
+  $("nearList").innerHTML = items.map(it =>
+    `<a class="near-item" target="_blank" rel="noopener"
+        href="https://map.kakao.com/link/map/${encodeURIComponent(it.name)},${it.lat},${it.lon}">
+       <span class="near-name">${it.name}</span>
+       <span class="near-kind">${it.kind}</span>
+       <span class="near-dist">${it.dist}m</span>
+     </a>`).join("");
+}
+function findNearby() {
+  if (!current) return;
+  const menuName = current.f[0].replace(/\(.*\)/, "");
+  $("nearby").hidden = false;
+  $("nearTitle").textContent = `📍 내 주변 1km — ${current.f[2]} ${menuName}`;
+  $("nearList").innerHTML = "";
+  renderMapLinks(menuName);
+  $("nearby").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "nearest" });
+
+  if (!navigator.geolocation) {
+    $("nearStatus").textContent = "이 브라우저는 위치 기능을 지원하지 않아요. 지도 링크로 검색해 보세요!";
+    return;
+  }
+  $("nearStatus").innerHTML = `<span class="spinner"></span>현재 위치를 확인하는 중…`;
+  navigator.geolocation.getCurrentPosition(async pos => {
+    $("nearStatus").innerHTML = `<span class="spinner"></span>주변 1km 음식점을 검색하는 중…`;
+    try {
+      await fetchNearby(pos.coords.latitude, pos.coords.longitude);
+    } catch (e) {
+      $("nearStatus").textContent =
+        "주변 검색 서버에 연결하지 못했어요 (온라인 게시 환경에서는 차단될 수 있어요). 아래 지도 링크로 검색해 보세요!";
+    }
+  }, err => {
+    const msg = err.code === 1
+      ? "위치 권한이 거부됐어요. 브라우저 주소창의 위치 아이콘에서 허용해 주세요."
+      : "위치를 가져오지 못했어요.";
+    $("nearStatus").textContent = msg + " 아래 지도 링크로도 검색할 수 있어요!";
+  }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+}
+
+/* ── 이벤트 ── */
+$("btnRoll").addEventListener("click", roll);
+$("btnNear").addEventListener("click", findNearby);
+$("btnWeather").addEventListener("click", applyWeather);
+$("wcA").addEventListener("click", () => wcChoose("A"));
+$("wcB").addEventListener("click", () => wcChoose("B"));
+$("btnShuffle").addEventListener("click", wcStart);
+
+$("modeTabs").addEventListener("click", e => {
+  const t = e.target.closest("[data-mode]");
+  if (t && t.dataset.mode !== mode) setMode(t.dataset.mode);
+});
+
+$("btnAgain").addEventListener("click", () => {
+  if (current) picked.push(current.f[0]);
+  current = null;
+  rerollCount++;
+  renderHistory();
+  if (pool().length === 0) { picked = []; renderHistory(); }
+  roll();
+});
+
+$("btnLock").addEventListener("click", () => {
+  if (!current) return;
+  current.locked = true;
+  const isOut = current.f[5] !== "집" && curVenue !== "집";
+  const indecision = rerollCount > 0
+    ? ` (오늘의 결정장애 지수: ${rerollCount}회 🌀)`
+    : " — 단번에 결정, 멋집니다";
+  $("stQuip").textContent = (isOut
+    ? `오늘 엄씨의 저녁은 ${current.f[0]}! 아래에서 주변 맛집을 찾아보세요 📍`
+    : `오늘 엄씨의 저녁은 ${current.f[0]}! 맛있게 만들어 드세요 😋`) + indecision;
+  $("btnAgain").hidden = true;
+  $("btnLock").hidden = true;
+  $("btnRoll").hidden = false;
+  $("btnRoll").textContent = "내일 또 뽑기";
+  rerollCount = 0;
+
+  const h = loadDiary();
+  h.push({ iso: new Date().toISOString().slice(0, 10),
+           n: current.f[0], e: current.f[2], c: current.f[1] });
+  saveDiary(h);
+  renderDiary();
+
+  if (isOut) findNearby();
+  renderHistory();
+  renderBoard();
+});
+
+$("btnClearDiary").addEventListener("click", () => {
+  saveDiary([]);
+  renderDiary();
+  renderBoard();
+});
+
+$("venueSwitch").addEventListener("click", e => {
+  const b = e.target.closest("[data-venue]");
+  if (!b) return;
+  curVenue = b.dataset.venue;
+  document.querySelectorAll(".venue-btn").forEach(v =>
+    v.setAttribute("aria-pressed", v.dataset.venue === curVenue));
+  renderBoard();
+  if (mode === "worldcup") wcStart();
+});
+
+$("catChips").addEventListener("click", e => {
+  const b = e.target.closest("[data-cat]");
+  if (!b) return;
+  curCat = b.dataset.cat;
+  renderChips(); renderBoard();
+  if (mode === "worldcup") wcStart();
+});
+
+$("moodChips").addEventListener("click", e => {
+  const b = e.target.closest("[data-mood]");
+  if (!b) return;
+  const m = b.dataset.mood;
+  curMoods.has(m) ? curMoods.delete(m) : curMoods.add(m);
+  renderChips(); renderBoard();
+  if (mode === "worldcup") wcStart();
+});
+
+renderChips();
+renderBoard();
+renderDiary();
+</script>
