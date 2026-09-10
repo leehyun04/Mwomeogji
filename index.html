@@ -936,32 +936,112 @@ function findNearby() {
   }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
 }
 
-/* ── 결과 공유 (카카오톡 등) ── */
+/* ── 결과 공유 (카카오톡 등) — 결과 카드 이미지 생성 포함 ── */
 const APP_URL = "https://leehyun04.github.io/Mwomeogji/";
+
+function wrapText(x, text, cx, y, maxW, lh) {
+  const words = text.split(" ");
+  let line = "", lines = [];
+  for (const w of words) {
+    const t = line ? line + " " + w : w;
+    if (x.measureText(t).width > maxW && line) { lines.push(line); line = w; }
+    else line = t;
+  }
+  lines.push(line);
+  lines.forEach((l, i) => x.fillText(l, cx, y + i * lh));
+}
+
+async function makeResultCard() {
+  const f = current.f;
+  try { await document.fonts.load('120px "Jua"'); await document.fonts.load('38px "IBM Plex Sans KR"'); } catch (e) {}
+  const W = 1080, H = 1080;
+  const cv = document.createElement("canvas");
+  cv.width = W; cv.height = H;
+  const x = cv.getContext("2d");
+  // 배경
+  x.fillStyle = "#FAF6EF"; x.fillRect(0, 0, W, H);
+  // 상하단 포장마차 스트라이프
+  for (let i = 0; i < W / 88; i++) {
+    x.fillStyle = i % 2 ? "#E8A93C" : "#C8342C";
+    x.fillRect(i * 88, 0, 88, 26);
+    x.fillStyle = i % 2 ? "#C8342C" : "#E8A93C";
+    x.fillRect(i * 88, H - 26, 88, 26);
+  }
+  x.textAlign = "center";
+  // 앱 이름
+  x.fillStyle = "#6E6257"; x.font = '44px "Jua", sans-serif';
+  x.fillText("엄씨는 오늘 뭐 먹지?", W / 2, 135);
+  // 이모지
+  x.font = '230px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
+  x.fillText(f[2], W / 2, 440);
+  // 메뉴명
+  x.fillStyle = "#C8342C"; x.font = '120px "Jua", sans-serif';
+  x.fillText(f[0], W / 2, 620);
+  // 카테고리
+  x.fillStyle = "#2B221B"; x.font = '44px "Jua", sans-serif';
+  x.fillText(`— ${f[1]} —`, W / 2, 700);
+  // 한줄평
+  x.fillStyle = "#6E6257"; x.font = '38px "IBM Plex Sans KR", sans-serif';
+  wrapText(x, `"${f[4]}"`, W / 2, 800, 900, 56);
+  // 확정 / 후보 표시
+  if (current.locked) {
+    x.save(); x.translate(W / 2, 950); x.rotate(-0.05);
+    x.fillStyle = "#C8342C"; x.font = '64px "Jua", sans-serif';
+    x.fillText("오늘은 이거다! ✅", 0, 0); x.restore();
+  } else {
+    x.fillStyle = "#A99C8F"; x.font = '42px "IBM Plex Sans KR", sans-serif';
+    x.fillText("후보 등장! 어떠세요?", W / 2, 950);
+  }
+  // 주소
+  x.fillStyle = "#A99C8F"; x.font = '30px "IBM Plex Sans KR", sans-serif';
+  x.fillText("leehyun04.github.io/Mwomeogji", W / 2, 1026);
+  return new Promise(res => cv.toBlob(res, "image/png"));
+}
+
 async function shareResult() {
   if (!current) return;
   const f = current.f;
-  const decided = current.locked;
-  const text = decided
+  const text = current.locked
     ? `오늘 엄씨의 메뉴는 ${f[2]} ${f[0]}! — "${f[4]}"`
     : `엄씨의 메뉴 후보로 ${f[2]} ${f[0]}이(가) 뽑혔어요 — "${f[4]}"`;
   const btn = $("btnShare");
+  btn.disabled = true;
 
-  // 모바일: OS 공유 시트 → 카카오톡 선택 가능
-  if (navigator.share) {
-    try {
+  let blob = null;
+  try { blob = await makeResultCard(); } catch (e) {}
+
+  // 1) 모바일: 이미지 + 문구를 공유 시트로 (카카오톡 선택 가능)
+  try {
+    if (blob) {
+      const file = new File([blob], "menu.png", { type: "image/png" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: "엄씨는 오늘 뭐 먹지?", text: `${text}\n${APP_URL}` });
+        btn.disabled = false; return;
+      }
+    }
+    // 2) 이미지 공유 미지원 기기: 텍스트+링크만 공유
+    if (navigator.share) {
       await navigator.share({ title: "엄씨는 오늘 뭐 먹지?", text, url: APP_URL });
-    } catch (e) { /* 사용자가 공유 취소 */ }
-    return;
+      btn.disabled = false; return;
+    }
+  } catch (e) { btn.disabled = false; return; /* 사용자가 공유 취소 */ }
+
+  // 3) PC 폴백: 카드 이미지 저장 + 문구 클립보드 복사
+  if (blob) {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `오늘의메뉴_${f[0]}.png`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
   }
-  // PC: 클립보드 복사 폴백
   try {
     await navigator.clipboard.writeText(`${text}\n${APP_URL}`);
-    btn.textContent = "✅ 복사 완료! 카톡에 붙여넣으세요";
+    btn.textContent = "✅ 카드 저장 + 문구 복사됨!";
   } catch (e) {
-    btn.textContent = "복사 실패 — 직접 알려주세요 😅";
+    btn.textContent = blob ? "✅ 카드 이미지 저장됨!" : "공유를 지원하지 않는 브라우저예요";
   }
   setTimeout(() => { btn.textContent = "💬 카톡으로 공유"; }, 2500);
+  btn.disabled = false;
 }
 
 /* ── 이벤트 ── */
