@@ -325,7 +325,7 @@
   }
   .history .h-item.final { text-decoration: none; color: var(--accent); border-style: solid; border-color: var(--accent); font-weight: 700; }
 
-  /* ── 저녁 일기 ── */
+  /* ── 식사 일기 ── */
   .diary { display: flex; flex-wrap: wrap; gap: 8px; }
   .d-item {
     font-size: 13px; background: var(--panel);
@@ -360,9 +360,9 @@
 
 <div class="wrap">
   <header>
-    <div class="eyebrow">UHM'S DINNER ROULETTE</div>
+    <div class="eyebrow">UHM'S MENU ROULETTE</div>
     <h1>엄씨는 오늘 <span class="q">뭐 먹지?</span></h1>
-    <div class="sub">엄씨의 저녁 고민, 여기서 끝냅니다</div>
+    <div class="sub">엄씨의 메뉴 고민, 여기서 끝냅니다</div>
   </header>
 
   <div class="venue-switch" id="venueSwitch">
@@ -385,7 +385,7 @@
     <span class="stage-emoji" id="stEmoji">🍽️</span>
     <span class="stage-cat" id="stCat">한식</span>
     <div class="stage-name" id="stName">두구두구…</div>
-    <div class="stage-quip" id="stQuip">아래 버튼을 누르면 엄씨의 저녁이 정해집니다</div>
+    <div class="stage-quip" id="stQuip">아래 버튼을 누르면 엄씨의 메뉴가 정해집니다</div>
     <div class="btn-row">
       <button class="btn-main" id="btnRoll">뽑기!</button>
       <button class="btn-sub" id="btnAgain" hidden>이건 좀… 다시</button>
@@ -422,7 +422,7 @@
   </section>
 
   <section id="secDiary" hidden>
-    <div class="sec-label">📖 엄씨의 저녁 일기 <span style="letter-spacing:0; font-weight:400;">(최근에 먹은 건 후보에서 자동 제외)</span>
+    <div class="sec-label">📖 엄씨의 식사 일기 <span style="letter-spacing:0; font-weight:400;">(최근에 먹은 건 후보에서 자동 제외)</span>
       <button class="tiny-btn" id="btnClearDiary">기록 지우기</button>
     </div>
     <div class="diary" id="diary"></div>
@@ -586,7 +586,7 @@ let weatherOn = false;
 const $ = id => document.getElementById(id);
 const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-/* ── 저녁 일기 (localStorage) ── */
+/* ── 식사 일기 (localStorage) ── */
 const LS_KEY = "uhm.dinner.history";
 function loadDiary() {
   try { return JSON.parse(localStorage.getItem(LS_KEY)) || []; } catch (e) { return []; }
@@ -943,8 +943,8 @@ async function shareResult() {
   const f = current.f;
   const decided = current.locked;
   const text = decided
-    ? `오늘 엄씨의 저녁은 ${f[2]} ${f[0]}! — "${f[4]}"`
-    : `엄씨의 저녁 후보로 ${f[2]} ${f[0]}이(가) 뽑혔어요 — "${f[4]}"`;
+    ? `오늘 엄씨의 메뉴는 ${f[2]} ${f[0]}! — "${f[4]}"`
+    : `엄씨의 메뉴 후보로 ${f[2]} ${f[0]}이(가) 뽑혔어요 — "${f[4]}"`;
   const btn = $("btnShare");
 
   // 모바일: OS 공유 시트 → 카카오톡 선택 가능
@@ -995,8 +995,8 @@ $("btnLock").addEventListener("click", () => {
     ? ` (오늘의 결정장애 지수: ${rerollCount}회 🌀)`
     : " — 단번에 결정, 멋집니다";
   $("stQuip").textContent = (isOut
-    ? `오늘 엄씨의 저녁은 ${current.f[0]}! 아래에서 주변 맛집을 찾아보세요 📍`
-    : `오늘 엄씨의 저녁은 ${current.f[0]}! 맛있게 만들어 드세요 😋`) + indecision;
+    ? `오늘 엄씨의 메뉴는 ${current.f[0]}! 아래에서 주변 맛집을 찾아보세요 📍`
+    : `오늘 엄씨의 메뉴는 ${current.f[0]}! 맛있게 만들어 드세요 😋`) + indecision;
   $("btnAgain").hidden = true;
   $("btnLock").hidden = true;
   $("btnRoll").hidden = false;
