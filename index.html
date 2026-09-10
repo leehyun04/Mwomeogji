@@ -391,6 +391,7 @@
       <button class="btn-sub" id="btnAgain" hidden>이건 좀… 다시</button>
       <button class="btn-sub" id="btnLock" hidden>이걸로 결정!</button>
       <button class="btn-near" id="btnNear" hidden>📍 주변 1km 음식점 찾기</button>
+      <button class="btn-sub" id="btnShare" hidden>💬 카톡으로 공유</button>
     </div>
     <div class="pool-count" id="poolCount"></div>
   </div>
@@ -686,6 +687,7 @@ function showResult(f, fromWC = false) {
   $("btnAgain").hidden = false;
   $("btnLock").hidden = false;
   $("btnNear").hidden = !(f[5] !== "집" && curVenue !== "집");
+  $("btnShare").hidden = false;
   rolling = false;
   renderBoard();
 }
@@ -697,6 +699,7 @@ function roll() {
   $("btnLock").hidden = true;
   $("btnAgain").hidden = true;
   $("btnNear").hidden = true;
+  $("btnShare").hidden = true;
   $("nearby").hidden = true;
   $("btnRoll").hidden = false;
   $("btnRoll").textContent = "뽑기!";
@@ -933,9 +936,38 @@ function findNearby() {
   }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
 }
 
+/* ── 결과 공유 (카카오톡 등) ── */
+const APP_URL = "https://leehyun04.github.io/Mwomeogji/";
+async function shareResult() {
+  if (!current) return;
+  const f = current.f;
+  const decided = current.locked;
+  const text = decided
+    ? `오늘 엄씨의 저녁은 ${f[2]} ${f[0]}! — "${f[4]}"`
+    : `엄씨의 저녁 후보로 ${f[2]} ${f[0]}이(가) 뽑혔어요 — "${f[4]}"`;
+  const btn = $("btnShare");
+
+  // 모바일: OS 공유 시트 → 카카오톡 선택 가능
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: "엄씨는 오늘 뭐 먹지?", text, url: APP_URL });
+    } catch (e) { /* 사용자가 공유 취소 */ }
+    return;
+  }
+  // PC: 클립보드 복사 폴백
+  try {
+    await navigator.clipboard.writeText(`${text}\n${APP_URL}`);
+    btn.textContent = "✅ 복사 완료! 카톡에 붙여넣으세요";
+  } catch (e) {
+    btn.textContent = "복사 실패 — 직접 알려주세요 😅";
+  }
+  setTimeout(() => { btn.textContent = "💬 카톡으로 공유"; }, 2500);
+}
+
 /* ── 이벤트 ── */
 $("btnRoll").addEventListener("click", roll);
 $("btnNear").addEventListener("click", findNearby);
+$("btnShare").addEventListener("click", shareResult);
 $("btnWeather").addEventListener("click", applyWeather);
 $("wcA").addEventListener("click", () => wcChoose("A"));
 $("wcB").addEventListener("click", () => wcChoose("B"));
