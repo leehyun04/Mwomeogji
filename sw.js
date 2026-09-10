@@ -1,5 +1,5 @@
 // 엄씨는 오늘 뭐 먹지? — 오프라인 지원 서비스 워커
-const CACHE = "mwomeogji-v1";
+const CACHE = "mwomeogji-v2";
 const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", e => {
@@ -19,8 +19,22 @@ self.addEventListener("activate", e => {
 self.addEventListener("fetch", e => {
   if (e.request.method !== "GET") return;
   const url = new URL(e.request.url);
-  // 날씨·주변검색 API는 항상 네트워크로, 앱 파일만 캐시 우선
+  // 날씨·주변검색 API는 항상 네트워크로
   if (url.origin !== location.origin) return;
+
+  // HTML(페이지 진입)은 네트워크 우선 → 항상 최신 버전, 오프라인일 때만 캐시
+  if (e.request.mode === "navigate" || url.pathname.endsWith(".html")) {
+    e.respondWith(
+      fetch(e.request).then(res => {
+        const copy = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, copy));
+        return res;
+      }).catch(() => caches.match(e.request).then(hit => hit || caches.match("./index.html")))
+    );
+    return;
+  }
+
+  // 아이콘 등 정적 파일은 캐시 우선
   e.respondWith(
     caches.match(e.request).then(hit => hit || fetch(e.request).then(res => {
       const copy = res.clone();
